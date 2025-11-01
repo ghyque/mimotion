@@ -228,26 +228,7 @@ def push_to_push_plus(exec_results, summary):
                 else:
                     html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
             html += '</ul>'
-
-        # === 追加下次运行时间 ===
-        try:
-            cron_file_path = "mimotion/cron_change_time"
-            next_time_line = ""
-            if os.path.exists(cron_file_path):
-                with open(cron_file_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                    if lines:
-                        last_line = lines[-1].strip()
-                        if "北京时间" in last_line:
-                            next_time_line = last_line
-            if next_time_line:
-                html += f'<div style="margin-top:10px;font-weight:bold;">🕒 下次运行时间：{next_time_line}</div>'
-        except Exception as e:
-            print(f"读取 cron_change_time 出错：{e}")
-
-        # 推送
         push_plus(f"{format_now()} 刷步数通知", html)
-
 
 
 def run_single_account(total, idx, user_mi, passwd_mi):

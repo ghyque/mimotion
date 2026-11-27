@@ -1,0 +1,46 @@
+name: 每日随机刷步数
+
+on:
+  schedule:
+    # UTC 12:00 = 北京时间 20:00；启动后随机等待 0-3 小时
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT }}
+
+      - name: 随机等待至北京时间20:00-23:00
+        run: |
+          delay=$(shuf -i 0-10799 -n 1)
+          target=$(date -u -d "@$(($(date +%s) + delay))" '+%Y-%m-%d %H:%M:%S UTC')
+          echo "随机等待秒数：$delay"
+          echo "预计执行时间：$target"
+          sleep "$delay"
+
+      - name: 初始化Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: 开始
+        env:
+          CONFIG: ${{ secrets.CONFIG }}
+          AES_KEY: ${{ secrets.AES_KEY }}
+        run: |
+          pip3 install -r requirements.txt
+          python3 main.py
+
+      - name: persist tokens
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add .
+          git commit -m "persist tokens trigger by ${{ github.event_name }}"
+          git push origin master

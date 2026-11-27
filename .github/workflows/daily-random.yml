@@ -2,7 +2,7 @@ name: 每日随机刷步数
 
 on:
   schedule:
-    # UTC 12:00 = 北京时间 20:00；启动后随机等待 0-3 小时
+    # UTC 12:00 = 北京时间 20:00
     - cron: '0 12 * * *'
   workflow_dispatch:
 
@@ -16,12 +16,21 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
 
-      - name: 随机等待至北京时间20:00-23:00
+      - name: 随机选择北京时间20:00-23:00的执行时刻
         run: |
-          delay=$(shuf -i 0-10799 -n 1)
-          target=$(date -u -d "@$(($(date +%s) + delay))" '+%Y-%m-%d %H:%M:%S UTC')
-          echo "随机等待秒数：$delay"
-          echo "预计执行时间：$target"
+          now=$(date +%s)
+          today=$(TZ=Asia/Shanghai date '+%Y-%m-%d')
+          start=$(TZ=Asia/Shanghai date -d "$today 20:00:00" +%s)
+          end=$(TZ=Asia/Shanghai date -d "$today 23:00:00" +%s)
+          target=$((start + $(shuf -i 0-10799 -n 1)))
+          if [ "$now" -ge "$end" ]; then
+            echo "当前已超过北京时间23:00，本次跳过，避免窗口外执行。"
+            exit 0
+          fi
+          delay=$((target - now))
+          if [ "$delay" -lt 0 ]; then delay=0; fi
+          echo "随机执行时刻：$(TZ=Asia/Shanghai date -d "@$target" '+%Y-%m-%d %H:%M:%S')"
+          echo "实际等待秒数：$delay"
           sleep "$delay"
 
       - name: 初始化Python

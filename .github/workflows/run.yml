@@ -1,8 +1,6 @@
 name: 刷步数
 
 on:
-  schedule:
-    - cron: '5 1,6,10,13,17,20,23 * * *'
   workflow_dispatch:
 
 jobs:
@@ -18,12 +16,12 @@ jobs:
         run: |
           sudo -E apt-get -qq update
           sudo -E apt-get install zsh -y
-          
+
       - name: 初始化Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.10"
-          
+
       - name: 开始
         env:
             CONFIG: ${{ secrets.CONFIG }}
